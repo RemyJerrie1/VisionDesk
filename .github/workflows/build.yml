@@ -14,7 +14,7 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -33,7 +33,7 @@ jobs:
           ./dist/VisionDesk.app/Contents/MacOS/VisionDesk --smoke
           cd dist && zip -qr ../VisionDesk-macOS.zip VisionDesk.app
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: VisionDesk-${{ runner.os }}
           path: VisionDesk-*.zip
@@ -43,7 +43,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
