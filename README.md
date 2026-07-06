@@ -7,7 +7,7 @@
 > laptop CPU. A guided 4-step flow (observe → prepare data → fine-tune → compare)
 > makes transfer learning legible. 100% local, CPU-only, free (no GPU, no paid API).
 
-**Status:** Phase 1 — core + desktop UI complete, tested, gates green. Packaging via the `build` workflow (defined; not yet run on a runner).
+**Status:** Phase 1 complete — core + desktop UI, tested, CI green, packaged Win/macOS ([Release v0.1.0](https://github.com/RemyJerrie1/VisionDesk/releases/tag/v0.1.0)).
 
 ![VisionDesk — freeze ResNet50, train a LoRA head, watch loss/accuracy converge](docs/screenshot.png)
 
@@ -50,7 +50,7 @@ python -m venv .venv && ./.venv/Scripts/python -m pip install -r requirements-de
 | 3 | It actually learns | `pytest` — frozen ResNet50 + LoRA head goes 0.69 → 0.94 on the synthetic task | ✅ |
 | 4 | Guided window, non-blocking | `python -m app` → observe → data → fine-tune (trains off the UI thread, live curve) → compare | ✅ |
 | 5 | Data legibility | always-on folder/CSV format panel + pandas preview + demo-scale warning | ✅ |
-| 6 | Installable app | PyInstaller `.exe`/`.app` via `build` workflow (`--smoke` per OS) | ⬜ workflow defined; not yet run |
+| 6 | Installable app | PyInstaller `.exe`/`.app` via `build` workflow (`--smoke` per OS) | ✅ Win+macOS packaged on CI, per-OS `--smoke` passed, Release v0.1.0 published |
 
 ## Design decisions
 - **Hand-rolled LoRA, not `peft`/`minlora`** — the adapter is a dozen lines (`y = base(x) + (x·Aᵀ·Bᵀ)·α/r`, `B` zero-init so training starts at the base), which keeps it explainable and unit-testable and drops a heavy Hugging Face dependency chain. `minlora` isn't on PyPI and `peft` is transformer-centric; for a single `Linear` head the DIY version is clearer. Counter-example: adapting many attention layers of an LLM → use `peft`.

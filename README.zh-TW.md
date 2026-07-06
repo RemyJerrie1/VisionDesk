@@ -7,7 +7,7 @@
 > (觀察 → 準備資料 → 微調 → 前後對照)讓遷移學習看得見。全程本機、純
 > CPU、免費(無 GPU、無付費 API)。
 
-**狀態:** Phase 1 — 核心 + 桌面 UI 完成,已測試,檢查全綠。打包由 `build` workflow 定義(尚未在 runner 上實跑)。
+**狀態:** Phase 1 完成 — 核心 + 桌面 UI、已測試、CI 綠、Win/macOS 已打包([Release v0.1.0](https://github.com/RemyJerrie1/VisionDesk/releases/tag/v0.1.0))。
 
 ![VisionDesk — 凍結 ResNet50、訓練 LoRA 頭、看 loss/準確率收斂](docs/screenshot.png)
 
@@ -50,7 +50,7 @@ python -m venv .venv && ./.venv/Scripts/python -m pip install -r requirements-de
 | 3 | 真的學得起來 | `pytest`——凍結 ResNet50 + LoRA 頭在合成任務 0.69 → 0.94 | ✅ |
 | 4 | 引導式視窗、不卡 UI | `python -m app` → 觀察 → 資料 → 微調(訓練在 UI 外、即時曲線)→ 對照 | ✅ |
 | 5 | 資料看得懂 | 常駐資料夾/CSV 格式面板 + pandas 預覽 + demo 規模警告 | ✅ |
-| 6 | 可安裝應用 | PyInstaller `.exe`/`.app`,由 `build` workflow(逐 OS `--smoke`) | ⬜ workflow 已定義、尚未實跑 |
+| 6 | 可安裝應用 | PyInstaller `.exe`/`.app`,由 `build` workflow(逐 OS `--smoke`) | ✅ Win+macOS 於 CI 打包、逐 OS `--smoke` 通過、已發 Release v0.1.0 |
 
 ## 設計取捨
 - **自寫 LoRA,不用 `peft`/`minlora`**——轉接層就十來行(`y = base(x) + (x·Aᵀ·Bᵀ)·α/r`、`B` 零初始化使訓練從 base 出發),可解釋、可單元測試,且省下沉重的 Hugging Face 依賴鏈。`minlora` 不在 PyPI、`peft` 以 transformer 為主;單一 `Linear` 頭用自寫版更清楚。反例:要微調 LLM 眾多 attention 層 → 用 `peft`。
