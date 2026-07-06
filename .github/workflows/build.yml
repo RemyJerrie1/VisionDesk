@@ -1,0 +1,52 @@
+name: build
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-dev.txt
+      - run: pyinstaller --noconfirm --windowed --name VisionDesk --collect-all torch --collect-all torchvision -p . app/__main__.py
+
+      - name: smoke + zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./dist/VisionDesk/VisionDesk.exe --smoke
+          Compress-Archive -Path dist/VisionDesk -DestinationPath VisionDesk-Windows.zip
+      - name: smoke + zip (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ./dist/VisionDesk.app/Contents/MacOS/VisionDesk --smoke
+          cd dist && zip -qr ../VisionDesk-macOS.zip VisionDesk.app
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: VisionDesk-${{ runner.os }}
+          path: VisionDesk-*.zip
+
+  release:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ github.ref_name }}" dist/*.zip --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --generate-notes
