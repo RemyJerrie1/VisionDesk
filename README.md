@@ -11,6 +11,18 @@
 
 ![VisionDesk — freeze ResNet50, train a LoRA head, watch loss/accuracy converge](docs/screenshot.png)
 
+<a href="./docs/media/product-walkthrough.mp4"><img src="./docs/media/product-walkthrough.gif" width="760" alt="VisionDesk four-step LoRA fine-tuning workflow" /></a>
+
+## Business and engineering value
+
+| Audience | What this demonstrates |
+|---|---|
+| Executive / product | A complex ML workflow reduced to a guided, understandable desktop experience with no cloud bill or data upload |
+| Staff engineering | A clean separation between LoRA math, dataset validation, training, UI orchestration, and packaging |
+| Hiring | Ownership across model adaptation, desktop UX, background work, testing, CI, and multi-platform release |
+
+**Evidence boundary:** the app performs real local training on ResNet50 features. The bundled sample is intentionally small and educational; it is not presented as a production benchmark.
+
 ## Why it exists
 Fine-tuning a vision model usually reads as "GPU, big dataset, someone else's script." VisionDesk shows the opposite: **freeze 23.5M backbone params, train ~16K LoRA params (0.070%)**, and a handful of images on CPU is enough to move accuracy on your own classes. Every step is on screen — what the model eats, how your data must look, what trains, and how much LoRA helped.
 
