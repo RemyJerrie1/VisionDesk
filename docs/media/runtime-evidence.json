@@ -1,0 +1,13 @@
+{
+  "workflow": "real VisionDesk core + QMainWindow",
+  "epochs": 8,
+  "classes": [
+    "class_0",
+    "class_1"
+  ],
+  "trainable_parameters": 16400,
+  "total_parameters": 23528530,
+  "trainable_percent": 0.06970261210538865,
+  "before_accuracy": 0.4375,
+  "after_accuracy": 0.8125
+}

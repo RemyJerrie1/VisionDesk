@@ -6,15 +6,16 @@ import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
+from app.design_system.tokens import COLORS
 from core.train import EpochLog
 
-_BG = "#1C2128"
-_FG = "#E6EDF3"
-_GRID = "#30363D"
-_LOSS = "#F0883E"  # orange
-_ACC = "#4E9EF7"  # blue
-_BEFORE = "#5A657A"  # muted
-_AFTER = "#5DBB7A"  # green (improvement)
+_BG = COLORS["surface"]
+_FG = COLORS["text"]
+_GRID = COLORS["border"]
+_LOSS = COLORS["warning"]
+_ACC = COLORS["accent"]
+_BEFORE = "#5A657A"  # muted comparison baseline
+_AFTER = COLORS["success"]
 
 
 class Canvas(FigureCanvasQTAgg):

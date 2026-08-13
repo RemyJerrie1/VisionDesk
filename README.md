@@ -1,76 +1,113 @@
 # VisionDesk
 
-**English · [中文](README.zh-TW.md)**
+**Fine-tune a vision model on your own classes—locally, on CPU, with the trainable surface made visible.**
 
-> Native desktop app for **LoRA fine-tuning of ResNet50** — freeze the pretrained
-> backbone, attach a tiny low-rank adapter, and teach it *your* classes on a
-> laptop CPU. A guided 4-step flow (observe → prepare data → fine-tune → compare)
-> makes transfer learning legible. 100% local, CPU-only, free (no GPU, no paid API).
+[Desktop release](https://github.com/RemyJerrie1/VisionDesk/releases/tag/v0.1.0) · [繁體中文](README.zh-TW.md)
 
-**Status:** Phase 1 complete — core + desktop UI, tested, CI green, packaged Win/macOS ([Release v0.1.0](https://github.com/RemyJerrie1/VisionDesk/releases/tag/v0.1.0)).
+[![CI](https://github.com/RemyJerrie1/VisionDesk/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/RemyJerrie1/VisionDesk/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/Python-3.13-3776ab) ![PyTorch](https://img.shields.io/badge/PyTorch-ResNet50-ee4c2c) ![Desktop](https://img.shields.io/badge/Desktop-PySide6-41cd52)
 
-![VisionDesk — freeze ResNet50, train a LoRA head, watch loss/accuracy converge](docs/screenshot.png)
+<a href="./docs/media/system-workflow.mp4"><img src="./docs/media/system-workflow.gif" width="820" alt="VisionDesk running through model observation, data preparation, LoRA training, and before-after evaluation" /></a>
 
-<a href="./docs/media/product-walkthrough.mp4"><img src="./docs/media/product-walkthrough.gif" width="760" alt="VisionDesk four-step LoRA fine-tuning workflow" /></a>
+This is the real VisionDesk window driven by the real core pipeline. The camera stays fixed; there is no zoom animation or mock dashboard.
 
-## Business and engineering value
+## What the run demonstrates
 
-| Audience | What this demonstrates |
-|---|---|
-| Executive / product | A complex ML workflow reduced to a guided, understandable desktop experience with no cloud bill or data upload |
-| Staff engineering | A clean separation between LoRA math, dataset validation, training, UI orchestration, and packaging |
-| Hiring | Ownership across model adaptation, desktop UX, background work, testing, CI, and multi-platform release |
+| Evidence | Captured result |
+| --- | --- |
+| Frozen ResNet50 backbone | 23,528,530 total parameters |
+| Tiny adaptation surface | 16,400 trainable parameters—0.0697% |
+| Real local training | 8 CPU epochs on the reproducible built-in dataset |
+| Measured improvement | validation accuracy 0.4375 → 0.8125 |
+| Privacy boundary | images and model work stay on the machine |
 
-**Evidence boundary:** the app performs real local training on ResNet50 features. The bundled sample is intentionally small and educational; it is not presented as a production benchmark.
+The bundled dataset is deliberately small and educational. These numbers demonstrate that the workflow learns; they are not presented as a production benchmark. See the [machine-readable runtime evidence](docs/media/runtime-evidence.json).
 
-## Why it exists
-Fine-tuning a vision model usually reads as "GPU, big dataset, someone else's script." VisionDesk shows the opposite: **freeze 23.5M backbone params, train ~16K LoRA params (0.070%)**, and a handful of images on CPU is enough to move accuracy on your own classes. Every step is on screen — what the model eats, how your data must look, what trains, and how much LoRA helped.
+## Runtime walkthroughs
 
-## The 4 steps
-| Step | What you see |
-|---|---|
-| ① Observe model | ResNet50 input/output spec (3×224×224, ImageNet-normalized → 1000 classes) + top-5 on a sample input |
-| ② Prepare data | built-in sample / import folder / import CSV — with an **always-on format-example panel** and a pandas preview (class counts, demo-scale warning) |
-| ③ Fine-tune (LoRA) | epochs / rank controls, **trainable X of Y (%)** headline, live dual-axis training curve (loss + val-acc), trained off the UI thread |
-| ④ Before / after | accuracy before (untrained head) vs after (+LoRA) + confusion matrix on your classes |
+### 1. Observe the model and prepare data
 
-## Phase 1 — layout
+<a href="./docs/media/data-workflow.mp4"><img src="./docs/media/data-workflow.gif" width="760" alt="VisionDesk model inspection and dataset preparation workflow" /></a>
+
+- Inspect the ResNet50 input, normalization, output shape, and parameter count.
+- Choose the built-in sample, an ImageFolder layout, or a CSV with `path,label`.
+- Preview class counts and surface demo-scale warnings before training.
+
+### 2. Fine-tune and compare
+
+<a href="./docs/media/training-results.mp4"><img src="./docs/media/training-results.gif" width="760" alt="VisionDesk LoRA configuration, training curve, and before-after results" /></a>
+
+- Configure epoch count and LoRA rank.
+- Train off the UI thread while loss and validation accuracy update.
+- Compare before/after accuracy and inspect the confusion matrix.
+
+## Design system
+
+The desktop UI and matplotlib charts now share semantic tokens instead of maintaining unrelated color constants:
+
+```text
+app/design_system/
+├── tokens.py      color, spacing, and radius roles
+├── theme.py       Qt component states and shared stylesheet
+└── __init__.py    public design-system boundary
 ```
-core/lora.py      # hand-rolled LoRALinear: frozen base + trainable low-rank A/B (y = base(x) + xAᵀBᵀ·α/r)
-core/modelzoo.py  # ResNet50 (IMAGENET1K_V2) load/freeze + LoRA head + top-k inference + input spec
-core/dataset.py   # learnable synthetic sample (no download) + ImageFolder + CSV(path,label) loaders
-core/train.py     # train the adapter only (Adam over trainable params) + evaluate + confusion
-core/validate.py  # data guards (≥2 classes, non-empty) with plain-language errors
-app/              # pure controller + QThread workers + matplotlib charts + i18n + 4-step window
-tests/            # LoRA math, trainable <2%, dataset guards, real training (0.69 → 0.94 on synthetic)
+
+The production window consumes `APP_STYLESHEET`; charts consume the same `COLORS` contract. `tests/test_design_system.py` prevents required roles from silently drifting.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Data["Folder / CSV / built-in sample"] --> Validate["Dataset validation"]
+  Validate --> Backbone["Frozen ResNet50 features"]
+  Backbone --> Adapter["Trainable LoRA head"]
+  Adapter --> Train["Background training worker"]
+  Train --> Evidence["Curve · accuracy · confusion matrix"]
 ```
 
-## Run
-```bash
-python -m venv .venv && ./.venv/Scripts/python -m pip install -r requirements-dev.txt
-./.venv/Scripts/python -m app            # launch the desktop app
-./.venv/Scripts/python -m app --smoke    # headless self-check (offscreen, no download) → "smoke ok"
-./.venv/Scripts/python -m pytest         # tests
+| Boundary | Responsibility |
+| --- | --- |
+| `core/` | LoRA math, datasets, validation, model loading, training, evaluation |
+| `app/controller.py` | UI-free orchestration and typed results |
+| `app/worker.py` | non-blocking Qt worker lifecycle |
+| `app/main_window.py` | guided four-step product flow |
+| `app/design_system/` | shared semantic visual contract |
+| `tests/` | math, dataset, learning, and design-system regression |
+
+> **Why there is no Bruno collection:** VisionDesk is a native desktop application with no HTTP API. Adding an empty collection would misrepresent the architecture. Pytest contracts, the packaged `--smoke` path, and the reproducible runtime capture are the executable evidence instead.
+
+## Run locally
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.venv\Scripts\python.exe -m app
 ```
-> First real run downloads the ResNet50 weights (~100 MB, once); `--smoke` and the tests do not need them.
 
-## Acceptance (Phase 1)
-| # | Criterion | How to verify | Status |
-|---|-----------|---------------|:--:|
-| 1 | LoRA math correct | `pytest` — forward shape, base frozen / adapter trainable | ✅ |
-| 2 | Adapter is tiny | `pytest` — trainable < 2% of total (3-class head = 0.070%) | ✅ |
-| 3 | It actually learns | `pytest` — frozen ResNet50 + LoRA head goes 0.69 → 0.94 on the synthetic task | ✅ |
-| 4 | Guided window, non-blocking | `python -m app` → observe → data → fine-tune (trains off the UI thread, live curve) → compare | ✅ |
-| 5 | Data legibility | always-on folder/CSV format panel + pandas preview + demo-scale warning | ✅ |
-| 6 | Installable app | PyInstaller `.exe`/`.app` via `build` workflow (`--smoke` per OS) | ✅ Win+macOS packaged on CI, per-OS `--smoke` passed, Release v0.1.0 published |
+Verification:
 
-## Design decisions
-- **Hand-rolled LoRA, not `peft`/`minlora`** — the adapter is a dozen lines (`y = base(x) + (x·Aᵀ·Bᵀ)·α/r`, `B` zero-init so training starts at the base), which keeps it explainable and unit-testable and drops a heavy Hugging Face dependency chain. `minlora` isn't on PyPI and `peft` is transformer-centric; for a single `Linear` head the DIY version is clearer. Counter-example: adapting many attention layers of an LLM → use `peft`.
-- **Freeze the whole backbone, LoRA only the head (Phase 1)** — the pretrained ImageNet features transfer; training only the low-rank head is what makes CPU + little data viable and the trainable-% headline honest. Counter-example: a domain far from ImageNet (medical/satellite) → inject LoRA deeper into conv blocks (a later phase).
-- **Learnable synthetic sample, colour-encoded** — the built-in dataset encodes class in image colour so the before/after accuracy story is *real signal*, not noise, and ships with zero download. Counter-example: a benchmark comparison → import a real folder/CSV.
-- **Pure core + threaded UI** — all ML logic is Qt-free and unit-tested; the window only renders and runs training on a `QThread`, so it never freezes and the core stays testable. Counter-example: a one-off script → skip the split.
+```powershell
+.venv\Scripts\python.exe -m app --smoke
+.venv\Scripts\python.exe -m pytest -q
+.venv\Scripts\python.exe -m ruff check .
+.venv\Scripts\python.exe -m mypy core app
+```
 
-## Stack
-Python · **PyTorch / torchvision (ResNet50)** · hand-rolled LoRA · numpy/pandas · matplotlib · PySide6 · pytest/ruff/mypy.
+<details>
+<summary><strong>Engineering decisions</strong></summary>
 
-> Spec & roadmap: `MyExperience/作品藍圖/作品集/原生桌面/VisionDesk/` (Phase 2 = Grad-CAM explainability, Phase 3 = detection/YOLO).
+- **Hand-rolled LoRA:** the adapter is small, explainable, and unit-testable; a transformer-oriented dependency stack is unnecessary for one linear head.
+- **Frozen backbone:** only the low-rank classifier adaptation trains, keeping CPU execution and the parameter percentage honest.
+- **Pure core plus threaded UI:** model code remains Qt-free while long-running work stays off the main thread.
+- **Learnable built-in sample:** class signal is deterministic and needs no download; real use can import ImageFolder or CSV data.
+- **PySide6 packaging:** one codebase ships Windows and macOS desktop artifacts through CI.
+
+</details>
+
+<details>
+<summary><strong>Current production boundary</strong></summary>
+
+Phase 1 supports top-level ResNet50 feature transfer and classification. First model use downloads the official weights once. Domain-shifted datasets may require deeper adapters, GPU training, stronger augmentation, and benchmark-grade evaluation.
+
+</details>
+
+<sub>Python 3.13 · PyTorch · torchvision · NumPy · pandas · matplotlib · PySide6 · pytest · ruff · mypy</sub>

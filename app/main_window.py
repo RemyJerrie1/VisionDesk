@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from app.charts import Canvas
 from app.controller import Observation, TrainResult
+from app.design_system import APP_STYLESHEET
 from app.i18n import I18n
 from app.worker import ObserveWorker, TrainWorker
 from core.dataset import Loaders, csv_loaders, folder_loaders, sample_loaders
@@ -29,25 +30,6 @@ from core.dataset import Loaders, csv_loaders, folder_loaders, sample_loaders
 _FORMAT_FOLDER = "data/\n├─ cat/   a.jpg  b.jpg …\n└─ dog/   c.jpg  d.jpg …"
 _FORMAT_CSV = "path,label\nimages/a.jpg,cat\nimages/b.jpg,dog"
 _DEMO_LIMIT = 40  # per-class count under which we flag "demo scale"
-
-_QSS = """
-QMainWindow, QWidget { background: #0E1117; color: #E6EDF3; }
-QFrame#card { background: #1C2128; border: 1px solid #30363D; border-radius: 8px; }
-QFrame#hint { background: #16302B; border: 1px solid #2C5A4E; border-radius: 8px; }
-QFrame#rail { background: #10141A; border-right: 1px solid #30363D; }
-QLabel#hintText { color: #7EE2B8; }
-QLabel#h1 { font-size: 16px; font-weight: 600; }
-QLabel#big { font-size: 20px; font-weight: 600; }
-QLabel#mono { font-family: Consolas, "Courier New", monospace; color: #9DA7B3; }
-QLabel#muted { color: #8B949E; }
-QLabel#err { color: #E05A52; }
-QLabel#step { padding: 8px 10px; border-radius: 6px; color: #8B949E; }
-QLabel#stepActive { padding: 8px 10px; border-radius: 6px; background: #1f6feb; color: white; }
-QLabel#stepDone { padding: 8px 10px; border-radius: 6px; color: #5DBB7A; }
-QPushButton { background: #1f6feb; color: white; border: 0; padding: 8px 14px; border-radius: 6px; }
-QPushButton:disabled { background: #30363D; color: #8B949E; }
-QSpinBox { background: #1C2128; border: 1px solid #30363D; border-radius: 6px; padding: 4px; }
-"""
 
 
 class MainWindow(QMainWindow):
@@ -62,7 +44,7 @@ class MainWindow(QMainWindow):
         self._obs_worker: ObserveWorker | None = None
         self._train_worker: TrainWorker | None = None
         self._live_history: list = []
-        self.setStyleSheet(_QSS)
+        self.setStyleSheet(APP_STYLESHEET)
         self.resize(1120, 740)
         self._build()
         self._retranslate()
